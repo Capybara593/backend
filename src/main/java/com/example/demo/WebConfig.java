@@ -13,7 +13,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "https://capybara593.github.io",
                         "http://localhost:3000",
                         "https://foxhound-sharing-mackerel.ngrok-free.app",
-                        "https://df01-2001-ee0-4fc5-56f0-f547-fb30-a2d4-615f.ngrok-free.app"
+                        "https://backend-ard2.onrender.com"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
