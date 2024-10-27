@@ -24,8 +24,7 @@ public class User {
     private Boolean isTatus; // Trường trạng thái (đúng cú pháp)
 
     // Thiết lập mối quan hệ một User có nhiều FileMetadata
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FileMetadata> files;
+
 
     public User() {}
 
