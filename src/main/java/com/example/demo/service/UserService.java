@@ -28,19 +28,37 @@ public class UserService {
     // Lấy tất cả người dùng có trạng thái hoạt động
     public List<User> getAllUser() {
         return userRepository.findAll().stream()
-                .filter(user -> !user.getTatus()) // Lọc chỉ lấy user hoạt động
+                .filter(user -> Boolean.TRUE.equals(user.getTatus())) // Kiểm tra null an toàn
                 .collect(Collectors.toList());
     }
 
+
     // Cập nhật thông tin người dùng nếu tồn tại
     public String updateUser(User user) {
-        Optional<User> userId = userRepository.findById(user.getUserId());
-        if (userId.isPresent()) {
-            userRepository.save(user); // Lưu thay đổi nếu user tồn tại
+        Optional<User> existingUserOpt = userRepository.findById(user.getUserId());
+        if (existingUserOpt.isPresent()) {
+            User existingUser = existingUserOpt.get();
+
+            // Cập nhật các trường khác mà không làm mất tham chiếu của `files`
+            existingUser.setFullName(user.getFullName());
+            existingUser.setAddress(user.getAddress());
+            existingUser.setBirthDay(user.getBirthDay());
+            existingUser.setImage(user.getImage());
+            existingUser.setUsername(user.getUsername());
+            existingUser.setPassword(user.getPassword());
+            existingUser.setPhoneNumber(user.getPhoneNumber());
+            existingUser.setEmail(user.getEmail());
+            existingUser.setTatus(user.getTatus());
+
+            // Không thay đổi hoặc cập nhật `files` nếu không cần thiết
+            // Nếu muốn thay đổi `files`, cần chắc chắn thay đổi trong cùng một session
+
+            userRepository.save(existingUser); // Lưu lại user sau khi cập nhật
             return "Update Success";
         }
         return "Update Fail"; // Thông báo nếu không tìm thấy user
     }
+
 
     // Xóa người dùng bằng cách đặt trạng thái 'Tatus' thành true
     public String removeUser(String userId) {

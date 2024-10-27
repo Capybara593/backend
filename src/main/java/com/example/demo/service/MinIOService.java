@@ -2,14 +2,9 @@ package com.example.demo.service;
 
 import io.minio.*;
 import io.minio.messages.Item;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.demo.model.FileMetadata;
-import com.example.demo.model.User;
-import com.example.demo.repository.FileMetadataRepository;
-import com.example.demo.repository.UserRepository;
 import com.example.demo.controller.FileMetadataDTO;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -17,18 +12,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.time.LocalDateTime;
 
 @Service
 public class MinIOService {
-
     private final MinioClient minioClient;
-
-    @Autowired
-    private FileMetadataRepository fileMetadataRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     public MinIOService(
             @Value("${minio.url}") String url,
@@ -83,7 +70,7 @@ public class MinIOService {
                 fileMetadataDTO.setFileName(item.objectName());
                 fileMetadataDTO.setFileSize(item.size());
                 fileMetadataDTO.setUploadDate(dateFormat.format(Date.from(item.lastModified().toInstant())));
-                fileMetadataDTO.setFileType("application/octet-stream"); // MinIO không lưu MIME type
+                fileMetadataDTO.setFileType("application/octet-stream");
 
                 fileList.add(fileMetadataDTO);
             }

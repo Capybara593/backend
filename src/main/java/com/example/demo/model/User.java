@@ -20,6 +20,7 @@ public class User {
     private String phoneNumber;
     private String email;
 
+    @Column(name = "is_tatus")  // Ánh xạ với cột "is_tatus" trong cơ sở dữ liệu
     private Boolean isTatus; // Trường trạng thái (đúng cú pháp)
 
     // Thiết lập mối quan hệ một User có nhiều FileMetadata
