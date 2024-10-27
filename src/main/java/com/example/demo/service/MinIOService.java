@@ -28,19 +28,23 @@ public class MinIOService {
                 .build();
     }
 
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String uploadFile(MultipartFile file, String userId) {
         String bucketName = "bucket-" + userId;
 
         try {
+            // Kiểm tra xem bucket đã tồn tại chưa
             boolean bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+
+            // Nếu bucket chưa tồn tại, tiến hành tạo bucket
             if (!bucketExists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
 
+            // Tên file sẽ bao gồm userId để tránh trùng lặp
             String objectName = userId + "_" + file.getOriginalFilename().replaceAll("[^\\x20-\\x7E]", "_");
 
+            // Tải file lên MinIO
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -56,6 +60,7 @@ public class MinIOService {
             return "Failed to upload file: " + e.getMessage();
         }
     }
+
 
     public List<FileMetadataDTO> listFilesFromMinIO(String userId) {
         String bucketName = "bucket-" + userId;
