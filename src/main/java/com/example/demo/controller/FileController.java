@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
+//@CrossOrigin(origins = {"https://capybara593.github.io", "http://localhost:3000", "https://foxhound-sharing-mackerel.ngrok-free.app", "https://df01-2001-ee0-4fc5-56f0-f547-fb30-a2d4-615f.ngrok-free.app"})
 @RestController
 @RequestMapping("/api/file")
 public class FileController {

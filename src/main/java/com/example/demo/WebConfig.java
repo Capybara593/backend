@@ -12,12 +12,11 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "https://capybara593.github.io",
                         "http://localhost:3000",
-                        "https://foxhound-sharing-mackerel.ngrok-free.app" // loại bỏ khoảng trắng ở đây
+                        "https://foxhound-sharing-mackerel.ngrok-free.app",
+                        "https://df01-2001-ee0-4fc5-56f0-f547-fb30-a2d4-615f.ngrok-free.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
-
 }
-
