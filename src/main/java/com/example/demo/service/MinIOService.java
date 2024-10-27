@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.time.LocalDateTime;
+
 @Service
 public class MinIOService {
 
@@ -39,16 +40,12 @@ public class MinIOService {
                 .build();
     }
 
-
-
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String uploadFile(MultipartFile file, String userId) {
         String bucketName = "bucket-" + userId;
 
         try {
-            User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-
             boolean bucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!bucketExists) {
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
@@ -65,22 +62,38 @@ public class MinIOService {
                             .build()
             );
 
-            FileMetadata fileMetadata = new FileMetadata(
-                    user,
-                    file.getOriginalFilename(),
-                    objectName,
-                    file.getSize(),
-                    file.getContentType(),
-                    LocalDateTime.now().format(dateFormatter) // Lưu dưới dạng String
-            );
-            fileMetadataRepository.save(fileMetadata);
-
             return "File uploaded successfully: " + objectName;
         } catch (Exception e) {
             e.printStackTrace();
             return "Failed to upload file: " + e.getMessage();
         }
     }
+
+    public List<FileMetadataDTO> listFilesFromMinIO(String userId) {
+        String bucketName = "bucket-" + userId;
+        List<FileMetadataDTO> fileList = new ArrayList<>();
+
+        try {
+            Iterable<Result<Item>> objects = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
+
+            for (Result<Item> result : objects) {
+                Item item = result.get();
+
+                FileMetadataDTO fileMetadataDTO = new FileMetadataDTO();
+                fileMetadataDTO.setFileName(item.objectName());
+                fileMetadataDTO.setFileSize(item.size());
+                fileMetadataDTO.setUploadDate(dateFormat.format(Date.from(item.lastModified().toInstant())));
+                fileMetadataDTO.setFileType("application/octet-stream"); // MinIO không lưu MIME type
+
+                fileList.add(fileMetadataDTO);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return fileList;
+    }
+
     public byte[] downloadFile(String userId, String objectName) {
         String bucketName = "bucket-" + userId;
         String sanitizedObjectName = objectName.replaceAll("[^\\x20-\\x7E]", "_");
@@ -107,38 +120,12 @@ public class MinIOService {
                     .object(objectName)
                     .build());
 
-            fileMetadataRepository.deleteByFileUrl(objectName);
-
             return "File deleted successfully: " + objectName;
         } catch (Exception e) {
             e.printStackTrace();
             return "Failed to delete file: " + e.getMessage();
         }
     }
+
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    public List<FileMetadataDTO> listFilesFromMinIO(String userId) {
-        String bucketName = "bucket-" + userId;
-        List<FileMetadataDTO> fileList = new ArrayList<>();
-
-        try {
-            Iterable<Result<Item>> objects = minioClient.listObjects(ListObjectsArgs.builder().bucket(bucketName).build());
-
-            for (Result<Item> result : objects) {
-                Item item = result.get();
-
-                FileMetadataDTO fileMetadataDTO = new FileMetadataDTO();
-                fileMetadataDTO.setFileName(item.objectName());
-                fileMetadataDTO.setFileSize(item.size());
-                fileMetadataDTO.setUploadDate(dateFormat.format(Date.from(item.lastModified().toInstant())));
-                fileMetadataDTO.setFileType("application/octet-stream"); // MinIO không lưu MIME type
-
-                fileList.add(fileMetadataDTO);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return fileList;
-    }
 }

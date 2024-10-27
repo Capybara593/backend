@@ -1,15 +1,10 @@
 package com.example.demo.controller;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
-
-import java.util.Date;
-
-//@CrossOrigin(origins = {"https://capybara593.github.io", "http://localhost:3000", "https://foxhound-sharing-mackerel.ngrok-free.app", "https://df01-2001-ee0-4fc5-56f0-f547-fb30-a2d4-615f.ngrok-free.app"})
 public class FileMetadataDTO {
     private String fileName;
     private Long fileSize;
+    private String uploadDate;
     private String fileType;
-    private String uploadDate; // Đổi thành String
 
     // Getters và setters
     public String getFileName() {
@@ -28,19 +23,19 @@ public class FileMetadataDTO {
         this.fileSize = fileSize;
     }
 
-    public String getFileType() {
-        return fileType;
-    }
-
-    public void setFileType(String fileType) {
-        this.fileType = fileType;
-    }
-
     public String getUploadDate() {
         return uploadDate;
     }
 
     public void setUploadDate(String uploadDate) {
         this.uploadDate = uploadDate;
+    }
+
+    public String getFileType() {
+        return fileType;
+    }
+
+    public void setFileType(String fileType) {
+        this.fileType = fileType;
     }
 }
