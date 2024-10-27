@@ -15,5 +15,6 @@ WORKDIR /app
 # Sao chép file .jar từ giai đoạn build sang giai đoạn chạy
 COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar demo.jar
 
+EXPOSE 8080
 # Khởi động ứng dụng
 ENTRYPOINT ["java", "-jar", "demo.jar"]
