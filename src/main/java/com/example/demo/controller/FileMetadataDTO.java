@@ -9,10 +9,9 @@ public class FileMetadataDTO {
     private String fileName;
     private Long fileSize;
     private String fileType;
-    private Date uploadDate;
+    private String uploadDate; // Đổi thành String
 
-    public FileMetadataDTO() {}
-
+    // Getters và setters
     public String getFileName() {
         return fileName;
     }
@@ -37,11 +36,11 @@ public class FileMetadataDTO {
         this.fileType = fileType;
     }
 
-    public Date getUploadDate() {
+    public String getUploadDate() {
         return uploadDate;
     }
 
-    public void setUploadDate(Date uploadDate) {
+    public void setUploadDate(String uploadDate) {
         this.uploadDate = uploadDate;
     }
 }

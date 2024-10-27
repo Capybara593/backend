@@ -1,8 +1,7 @@
 package com.example.demo.model;
 
 import jakarta.persistence.*;
-
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "file_metadata")
@@ -12,20 +11,19 @@ public class FileMetadata {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String fileName; // Tên file gốc
-    private String fileUrl; // Đường dẫn hoặc tên file trong MinIO
-    private Long fileSize; // Kích thước file
-    private String fileType; // Loại file (MIME type)
-    private Date uploadDate; // Ngày tải lên
+    private String fileName;
+    private String fileUrl;
+    private Long fileSize;
+    private String fileType;
+    private String uploadDate; // Sử dụng LocalDateTime thay vì Date
 
-    // Thiết lập mối quan hệ nhiều FileMetadata thuộc về một User
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "userId")
     private User user;
 
     public FileMetadata() {}
 
-    public FileMetadata(User user, String fileName, String fileUrl, Long fileSize, String fileType, Date uploadDate) {
+    public FileMetadata(User user, String fileName, String fileUrl, Long fileSize, String fileType, String uploadDate) {
         this.user = user;
         this.fileName = fileName;
         this.fileUrl = fileUrl;
@@ -71,11 +69,11 @@ public class FileMetadata {
         this.fileType = fileType;
     }
 
-    public Date getUploadDate() {
+    public String getUploadDate() {
         return uploadDate;
     }
 
-    public void setUploadDate(Date uploadDate) {
+    public void setUploadDate(String uploadDate) {
         this.uploadDate = uploadDate;
     }
 

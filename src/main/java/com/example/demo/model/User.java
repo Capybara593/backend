@@ -2,14 +2,13 @@ package com.example.demo.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-
-
 import java.util.List;
 
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "user")
 public class User {
+
     @Id
     private String userId;
     private String fullName;
@@ -21,23 +20,15 @@ public class User {
     private String phoneNumber;
     private String email;
 
-    // Thêm mối quan hệ một User có nhiều FileMetadata
+    private Boolean isTatus; // Trường trạng thái (đúng cú pháp)
+
+    // Thiết lập mối quan hệ một User có nhiều FileMetadata
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FileMetadata> files;
-    public Boolean getTatus() {
-        return isTatus;
-    }
 
-    public void setTatus(Boolean tatus) {
-        isTatus = tatus;
-    }
+    public User() {}
 
-    public Boolean isTatus;
-
-    public User(){
-
-    }
-    public User(String userId, String fullName, String address, String birthDay, String image, String username, String password, String phoneNumber, String email) {
+    public User(String userId, String fullName, String address, String birthDay, String image, String username, String password, String phoneNumber, String email, Boolean isTatus) {
         this.userId = userId;
         this.fullName = fullName;
         this.address = address;
@@ -47,16 +38,10 @@ public class User {
         this.password = password;
         this.phoneNumber = phoneNumber;
         this.email = email;
-
-    }
-    public String getUsername() {
-        return username;
+        this.isTatus = isTatus;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
+    // Getters và setters
     public String getUserId() {
         return userId;
     }
@@ -97,6 +82,14 @@ public class User {
         this.image = image;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -121,5 +114,11 @@ public class User {
         this.email = email;
     }
 
+    public Boolean getTatus() {
+        return isTatus;
+    }
 
+    public void setTatus(Boolean tatus) {
+        isTatus = tatus;
+    }
 }

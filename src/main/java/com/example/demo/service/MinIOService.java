@@ -12,10 +12,12 @@ import com.example.demo.repository.FileMetadataRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.controller.FileMetadataDTO;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+import java.time.LocalDateTime;
 @Service
 public class MinIOService {
 
@@ -36,6 +38,10 @@ public class MinIOService {
                 .credentials(accessKey, secretKey)
                 .build();
     }
+
+
+
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String uploadFile(MultipartFile file, String userId) {
         String bucketName = "bucket-" + userId;
@@ -65,7 +71,7 @@ public class MinIOService {
                     objectName,
                     file.getSize(),
                     file.getContentType(),
-                    new Date()
+                    LocalDateTime.now().format(dateFormatter) // Lưu dưới dạng String
             );
             fileMetadataRepository.save(fileMetadata);
 
@@ -75,7 +81,6 @@ public class MinIOService {
             return "Failed to upload file: " + e.getMessage();
         }
     }
-
     public byte[] downloadFile(String userId, String objectName) {
         String bucketName = "bucket-" + userId;
         String sanitizedObjectName = objectName.replaceAll("[^\\x20-\\x7E]", "_");
@@ -110,6 +115,7 @@ public class MinIOService {
             return "Failed to delete file: " + e.getMessage();
         }
     }
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public List<FileMetadataDTO> listFilesFromMinIO(String userId) {
         String bucketName = "bucket-" + userId;
@@ -124,7 +130,7 @@ public class MinIOService {
                 FileMetadataDTO fileMetadataDTO = new FileMetadataDTO();
                 fileMetadataDTO.setFileName(item.objectName());
                 fileMetadataDTO.setFileSize(item.size());
-                fileMetadataDTO.setUploadDate(Date.from(item.lastModified().toInstant()));
+                fileMetadataDTO.setUploadDate(dateFormat.format(Date.from(item.lastModified().toInstant())));
                 fileMetadataDTO.setFileType("application/octet-stream"); // MinIO không lưu MIME type
 
                 fileList.add(fileMetadataDTO);
