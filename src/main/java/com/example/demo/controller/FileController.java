@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.service.EmailService;
 import com.example.demo.service.MinIOService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -8,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 @RestController
@@ -16,6 +18,9 @@ public class FileController {
 
     @Autowired
     private MinIOService minIOService;
+
+    @Autowired
+    private EmailService emailService;
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(
@@ -48,5 +53,34 @@ public class FileController {
     public ResponseEntity<String> deleteFile(@PathVariable String userId, @PathVariable String objectName) {
         String result = minIOService.deleteFile(userId, objectName);
         return ResponseEntity.ok(result);
+    }
+
+    @PostMapping("/share/link")
+    public ResponseEntity<String> shareFileLink(
+            @RequestParam("userId") String userId,
+            @RequestParam("fileName") String fileName,
+            @RequestParam("permission") String permission) {
+        String token = minIOService.createShareableLink(userId, fileName, permission);
+        return ResponseEntity.ok("https://your-domain.com/api/file/access/" + token);
+    }
+
+    @PostMapping("/share/email")
+    public ResponseEntity<String> shareFileViaEmail(
+            @RequestParam("toEmail") String toEmail,
+            @RequestParam("subject") String subject,
+            @RequestParam("body") String body,
+            @RequestParam("userId") String userId,
+            @RequestParam("fileName") String fileName) {
+        String result = emailService.sendEmailWithAttachment(toEmail, subject, body, userId, fileName);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/access/{token}")
+    public ResponseEntity<byte[]> accessSharedFile(@PathVariable String token) {
+        byte[] fileContent = minIOService.accessSharedFile(token);
+        if (fileContent == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(fileContent);
     }
 }
