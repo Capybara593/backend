@@ -11,7 +11,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/file")
@@ -29,7 +31,13 @@ public class FileController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("userId") String userId) {
         String result = minIOService.uploadFile(file, userId);
-        messagingTemplate.convertAndSend("/topic/files", "File uploaded: " + file.getOriginalFilename());
+
+        // Tạo một thông điệp JSON để gửi
+        Map<String, String> message = new HashMap<>();
+        message.put("action", "upload");
+        message.put("fileName", file.getOriginalFilename());
+
+        messagingTemplate.convertAndSend("/topic/files", message);
         return ResponseEntity.ok(result);
     }
 
@@ -55,9 +63,16 @@ public class FileController {
     @DeleteMapping("/delete/{userId}/{objectName}")
     public ResponseEntity<String> deleteFile(@PathVariable String userId, @PathVariable String objectName) {
         String result = minIOService.deleteFile(userId, objectName);
-        messagingTemplate.convertAndSend("/topic/files", "File deleted: " + objectName);
+
+        // Tạo một thông điệp JSON để gửi
+        Map<String, String> message = new HashMap<>();
+        message.put("action", "delete");
+        message.put("fileName", objectName);
+
+        messagingTemplate.convertAndSend("/topic/files", message);
         return ResponseEntity.ok(result);
     }
+
 
     @PostMapping("/share/link")
     public ResponseEntity<String> shareFileLink(
