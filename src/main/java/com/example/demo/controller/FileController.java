@@ -80,7 +80,7 @@ public class FileController {
             @RequestParam("expirationDate") @DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss") Date expirationDate) {
 
         String token = minIOService.createShareableLink(userId, fileName, permission, expirationDate);
-        return ResponseEntity.ok("https://your-domain.com/api/file/access/" + token);
+        return ResponseEntity.ok("https://backend-ard2.onrender.com/api/file/access/" + token);
     }
 
     @PostMapping("/share/email")
