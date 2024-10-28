@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +19,8 @@ public class FileController {
 
     @Autowired
     private MinIOService minIOService;
-
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
     @Autowired
     private EmailService emailService;
 
@@ -27,6 +29,7 @@ public class FileController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("userId") String userId) {
         String result = minIOService.uploadFile(file, userId);
+        messagingTemplate.convertAndSend("/topic/files", "File uploaded: " + file.getOriginalFilename());
         return ResponseEntity.ok(result);
     }
 
@@ -52,6 +55,7 @@ public class FileController {
     @DeleteMapping("/delete/{userId}/{objectName}")
     public ResponseEntity<String> deleteFile(@PathVariable String userId, @PathVariable String objectName) {
         String result = minIOService.deleteFile(userId, objectName);
+        messagingTemplate.convertAndSend("/topic/files", "File deleted: " + objectName);
         return ResponseEntity.ok(result);
     }
 

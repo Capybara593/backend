@@ -12,6 +12,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "https://capybara593.github.io",
                         "http://localhost:3000",
+                        "http://localhost:3001",
                         "https://foxhound-sharing-mackerel.ngrok-free.app",
                         "https://backend-ard2.onrender.com"
                 )
