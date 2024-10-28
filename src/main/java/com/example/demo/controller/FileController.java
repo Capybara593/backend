@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.MinIOService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -11,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +34,6 @@ public class FileController {
             @RequestParam("userId") String userId) {
         String result = minIOService.uploadFile(file, userId);
 
-        // Tạo một thông điệp JSON để gửi
         Map<String, String> message = new HashMap<>();
         message.put("action", "upload");
         message.put("fileName", file.getOriginalFilename());
@@ -53,7 +54,6 @@ public class FileController {
         if (content == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + objectName + "\"")
@@ -64,7 +64,6 @@ public class FileController {
     public ResponseEntity<String> deleteFile(@PathVariable String userId, @PathVariable String objectName) {
         String result = minIOService.deleteFile(userId, objectName);
 
-        // Tạo một thông điệp JSON để gửi
         Map<String, String> message = new HashMap<>();
         message.put("action", "delete");
         message.put("fileName", objectName);
@@ -73,13 +72,14 @@ public class FileController {
         return ResponseEntity.ok(result);
     }
 
-
     @PostMapping("/share/link")
     public ResponseEntity<String> shareFileLink(
             @RequestParam("userId") String userId,
             @RequestParam("fileName") String fileName,
-            @RequestParam("permission") String permission) {
-        String token = minIOService.createShareableLink(userId, fileName, permission);
+            @RequestParam("permission") String permission,
+            @RequestParam("expirationDate") @DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss") Date expirationDate) {
+
+        String token = minIOService.createShareableLink(userId, fileName, permission, expirationDate);
         return ResponseEntity.ok("https://your-domain.com/api/file/access/" + token);
     }
 
@@ -96,10 +96,13 @@ public class FileController {
 
     @GetMapping("/access/{token}")
     public ResponseEntity<byte[]> accessSharedFile(@PathVariable String token) {
-        byte[] fileContent = minIOService.accessSharedFile(token);
-        if (fileContent == null) {
-            return ResponseEntity.notFound().build();
+        try {
+            byte[] fileContent = minIOService.accessSharedFile(token);
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(fileContent);
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
-        return ResponseEntity.ok(fileContent);
     }
 }

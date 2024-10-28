@@ -7,12 +7,13 @@ import io.minio.messages.Item;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class MinIOService {
@@ -73,16 +74,16 @@ public class MinIOService {
         return fileList;
     }
 
-    public String createShareableLink(String userId, String fileName, String permission) {
-        FileShareMetadata metadata = new FileShareMetadata(userId, fileName, permission);
+    public String createShareableLink(String userId, String fileName, String permission, Date expirationDate) {
+        FileShareMetadata metadata = new FileShareMetadata(userId, fileName, permission, expirationDate);
         return tokenService.createToken(metadata);
     }
 
     public byte[] accessSharedFile(String token) {
         try {
             FileShareMetadata metadata = tokenService.getMetadataFromToken(token);
-            if (metadata == null || !metadata.hasAccess()) {
-                throw new SecurityException("Token không hợp lệ hoặc không có quyền truy cập");
+            if (metadata == null || metadata.getExpirationDate().before(new Date())) {
+                throw new SecurityException("Token không hợp lệ hoặc đã hết hạn.");
             }
             String bucketName = "bucket-" + metadata.getUserId();
             String objectName = metadata.getObjectName();

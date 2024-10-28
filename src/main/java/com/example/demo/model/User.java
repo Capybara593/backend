@@ -21,6 +21,8 @@ public class User {
     private String phoneNumber;
     private String email;
 
+
+
     @Column(name = "is_status")  // Đổi tên cột để tránh lỗi chính tả
     private Boolean isStatus; // Đúng cú pháp và chính tả
 
@@ -37,6 +39,7 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.email = email;
         this.isStatus = isStatus;
+
     }
 
     // Getters và Setters
