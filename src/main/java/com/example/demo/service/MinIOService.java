@@ -4,11 +4,16 @@ import com.example.demo.controller.FileMetadataDTO;
 import com.example.demo.model.FileShareMetadata;
 import io.minio.*;
 import io.minio.messages.Item;
+import org.docx4j.Docx4J;
+import org.docx4j.convert.out.html.AbstractHtmlExporter;
+import org.docx4j.openpackaging.packages.WordprocessingMLPackage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -128,4 +133,69 @@ public class MinIOService {
     }
 
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    public String convertDocxToHtml(String userId, String objectName) {
+        String bucketName = "bucket-" + userId;
+        try (InputStream stream = minioClient.getObject(GetObjectArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .build())) {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(stream);
+            AbstractHtmlExporter.HtmlSettings htmlSettings = new AbstractHtmlExporter.HtmlSettings();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Docx4J.toHTML(htmlSettings, out, Docx4J.FLAG_EXPORT_PREFER_XSL);
+            return out.toString("UTF-8");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Convert .docx to PDF
+     */
+    public byte[] convertDocxToPdf(String userId, String objectName) {
+        String bucketName = "bucket-" + userId;
+        try (InputStream stream = minioClient.getObject(GetObjectArgs.builder()
+                .bucket(bucketName)
+                .object(objectName)
+                .build())) {
+            WordprocessingMLPackage wordMLPackage = WordprocessingMLPackage.load(stream);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            Docx4J.toPDF(wordMLPackage, out);
+            return out.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Generate Edit URL for OnlyOffice
+     */
+    public String generateEditUrl(String userId, String objectName) {
+        // Implement OnlyOffice URL generation logic here
+        // This is a placeholder implementation
+        String token = createShareableLink(userId, objectName, "edit", new Date(System.currentTimeMillis() + 3600000));
+        return "https://your-onlyoffice-server.com/edit?token=" + token;
+    }
+
+    /**
+     * Update existing file with new content
+     */
+    public void updateFile(String userId, String objectName, byte[] content) {
+        String bucketName = "bucket-" + userId;
+        try {
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(objectName)
+                    .stream(new ByteArrayInputStream(content), content.length, -1)
+                    .contentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    .build());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

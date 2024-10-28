@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.service.EmailService;
+import com.example.demo.service.LockService;
 import com.example.demo.service.MinIOService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,6 +28,8 @@ public class FileController {
     private SimpMessagingTemplate messagingTemplate;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private LockService lockService;
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadFile(
@@ -105,4 +108,73 @@ public class FileController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
     }
+    // Viewing endpoints
+    @GetMapping("/view/html/{userId}/{objectName}")
+    public ResponseEntity<String> viewFileAsHtml(@PathVariable String userId, @PathVariable String objectName) {
+        String htmlContent = minIOService.convertDocxToHtml(userId, objectName);
+        if (htmlContent == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to convert file.");
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_HTML)
+                .body(htmlContent);
+    }
+
+    @GetMapping("/view/pdf/{userId}/{objectName}")
+    public ResponseEntity<byte[]> viewFileAsPdf(@PathVariable String userId, @PathVariable String objectName) {
+        byte[] pdfContent = minIOService.convertDocxToPdf(userId, objectName);
+        if (pdfContent == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfContent);
+    }
+
+    // Editing endpoints
+    @PostMapping("/edit/url/{userId}/{objectName}")
+    public ResponseEntity<Map<String, String>> getEditUrl(@PathVariable String userId, @PathVariable String objectName) {
+        // Implement OnlyOffice or your chosen editor integration here
+        // Example response:
+        String editUrl = minIOService.generateEditUrl(userId, objectName);
+        Map<String, String> response = new HashMap<>();
+        response.put("editUrl", editUrl);
+        return ResponseEntity.ok(response);
+    }
+
+    // Locking endpoints
+    @PostMapping("/edit/lock")
+    public ResponseEntity<String> lockFile(@RequestParam String userId, @RequestParam String objectName, @RequestParam String editorId) {
+        boolean acquired = lockService.acquireLock(userId, objectName, editorId);
+        if (acquired) {
+            return ResponseEntity.ok("Lock acquired.");
+        } else {
+            String currentEditor = lockService.getEditor(userId, objectName);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("File is already being edited by " + currentEditor);
+        }
+    }
+
+    @PostMapping("/edit/unlock")
+    public ResponseEntity<String> unlockFile(@RequestParam String userId, @RequestParam String objectName, @RequestParam String editorId) {
+        lockService.releaseLock(userId, objectName, editorId);
+        return ResponseEntity.ok("Lock released.");
+    }
+
+    // Callback endpoint for OnlyOffice
+    @PostMapping("/edit/callback")
+    public ResponseEntity<String> handleEditCallback(@RequestBody OnlyOfficeCallback callback) {
+        // Implement callback handling logic here
+        // Example:
+        byte[] updatedFileContent = callback.getFileContent();
+        minIOService.updateFile(callback.getUserId(), callback.getObjectName(), updatedFileContent);
+
+        // Notify via WebSocket
+        Map<String, String> message = new HashMap<>();
+        message.put("action", "edit");
+        message.put("fileName", callback.getObjectName());
+        messagingTemplate.convertAndSend("/topic/files", message);
+
+        return ResponseEntity.ok("File updated successfully.");
+    }
+
 }
